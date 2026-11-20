@@ -190,6 +190,9 @@
      EINSTELLUNGEN – nur hier etwas ändern
      ========================================================= */
   var CONFIG = {
+    // Demo-Modus (Schulprojekt): nichts wird verschickt, Absenden führt direkt zur Danke-Seite,
+    // und jedes Gerät kann beliebig oft teilnehmen. Für echten Betrieb auf false setzen.
+    DEMO: true,
     // E-Mail-Adresse, an die jede Teilnahme geschickt wird (siehe README).
     EMAIL: "DEINE-EMAIL@example.de",
     SHOP_URL: "https://www.heimat-distillers.de/",
@@ -229,7 +232,7 @@
     (children || []).forEach(function (c) { if (c) n.appendChild(typeof c === "string" ? document.createTextNode(c) : c); });
     return n;
   }
-  function alreadyDone() { try { return localStorage.getItem(DONE_KEY) === "1"; } catch (e) { return false; } }
+  function alreadyDone() { if (CONFIG.DEMO) return false; try { return localStorage.getItem(DONE_KEY) === "1"; } catch (e) { return false; } }
   function markDone() { try { localStorage.setItem(DONE_KEY, "1"); } catch (e) {} }
   function score() { return state.picks.filter(function (p, i) { return p === QUESTIONS[i].answer; }).length; }
 
@@ -354,6 +357,12 @@
       if (!age.checked) { err.textContent = "Teilnehmen kannst du ab 18 Jahren."; age.focus(); return; }
       if (!ok.checked) { err.textContent = "Bitte akzeptiere die Teilnahmebedingungen."; ok.focus(); return; }
       if (honey.value) { markDone(); show("done"); return; } // Spam-Bot: still verwerfen
+      if (CONFIG.DEMO) {
+        submit.disabled = true;
+        submit.textContent = "Wird gesendet …";
+        setTimeout(function () { show("done"); }, 700);
+        return;
+      }
       if (!configured) { err.textContent = "Das Gewinnspiel ist noch nicht eingerichtet. Bitte versuch es später noch einmal."; return; }
 
       err.textContent = "";
@@ -443,7 +452,7 @@
   document.getElementById("termsClose").addEventListener("click", closeTerms);
   dlg.addEventListener("click", function (e) { if (e.target === dlg) closeTerms(); });
 
-  if (!configured) {
+  if (!configured && !CONFIG.DEMO) {
     document.getElementById("setup").appendChild(el("div", { class: "setup", role: "note",
       text: "Hinweis für euch: Trag in der index.html unter EINSTELLUNGEN eure E-Mail-Adresse ein, sonst kommen keine Teilnahmen an. Dieser Kasten verschwindet danach." }));
   }
